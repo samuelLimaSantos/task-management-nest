@@ -1,5 +1,5 @@
-import { IsEnum } from "class-validator";
-import { TaskStatus } from "../entities/task.entity";
+import { IsEnum } from 'class-validator';
+import { TaskStatus } from '../enums/taks-status.enum';
 
 export default class UpdateTaskDto {
   id: string;

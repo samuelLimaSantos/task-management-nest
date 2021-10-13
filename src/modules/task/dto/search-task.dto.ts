@@ -1,5 +1,5 @@
-import { IsEnum, IsOptional, IsString } from "class-validator";
-import { TaskStatus } from "../entities/task.entity";
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { TaskStatus } from '../enums/taks-status.enum';
 
 export class SearchTaskDto {
   @IsEnum(TaskStatus)
