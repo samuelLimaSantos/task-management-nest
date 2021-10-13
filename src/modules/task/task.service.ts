@@ -4,22 +4,23 @@ import {
   HttpStatus,
   Injectable,
 } from '@nestjs/common';
-import { HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
+import { User } from '../auth/entities/user.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { SearchTaskDto } from './dto/search-task.dto';
 import UpdateTaskDto from './dto/update-task.dto';
 import { Task } from './entities/task.entity';
-import { TaskStatus } from './enums/taks-status.enum';
 import { TaskRepository } from './repositories/task.repository';
 
 @Injectable()
 export class TaskService {
   constructor(readonly taskRepository: TaskRepository) {}
 
-  async getTasks(searchTaskDto: SearchTaskDto): Promise<Task[]> {
+  async getTasks(searchTaskDto: SearchTaskDto, user: User): Promise<Task[]> {
     const { search, status } = searchTaskDto;
 
     const query = this.taskRepository.createQueryBuilder('task');
+
+    query.where({ user });
 
     if (status) {
       query.andWhere('task.status = :status', { status });
@@ -27,7 +28,7 @@ export class TaskService {
 
     if (search) {
       query.andWhere(
-        'LOWER(task.title) LIKE LOWER(:search) OR LOWER(task.description) LIKE LOWER(:search)',
+        '(LOWER(task.title) LIKE LOWER(:search) OR LOWER(task.description) LIKE LOWER(:search))',
         { search: `%${search}%` },
       );
     }
@@ -37,8 +38,13 @@ export class TaskService {
     return tasks;
   }
 
-  async getById(id: string): Promise<Task> {
-    const task = await this.taskRepository.findOne(id);
+  async getById(id: string, user: User): Promise<Task> {
+    const task = await this.taskRepository.findOne({
+      where: {
+        id,
+        user,
+      }
+    });
 
     if (!task)
       throw new HttpException('Task does not exists', HttpStatus.BAD_REQUEST);
@@ -46,20 +52,20 @@ export class TaskService {
     return task;
   }
 
-  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
-    return await this.taskRepository.createTask(createTaskDto);
+  async createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
+    return await this.taskRepository.createTask(createTaskDto, user);
   }
 
-  async deleteTaskById(id: string): Promise<void> {
-    const { affected } = await this.taskRepository.delete(id);
+  async deleteTaskById(id: string, user: User): Promise<void> {
+    const { affected } = await this.taskRepository.delete({id, user});
 
     if (affected === 0) {
       throw new HttpException('Task does not exists', HttpStatus.BAD_REQUEST);
     }
   }
 
-  async updateStatus({ id, status }: UpdateTaskDto): Promise<Task> {
-    const task = await this.getById(id);
+  async updateStatus({ id, status }: UpdateTaskDto, user: User): Promise<Task> {
+    const task = await this.getById(id, user);
 
     task.status = status;
 
