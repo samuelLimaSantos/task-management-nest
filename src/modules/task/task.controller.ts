@@ -21,9 +21,7 @@ export class TaskController {
   constructor(private taskService: TaskService) {}
 
   @Get()
-  async listAllTasks(
-    @Query(new ValidationPipe()) searchTaskDto: SearchTaskDto,
-  ) {
+  async listAllTasks(@Query() searchTaskDto: SearchTaskDto) {
     return this.taskService.getTasks(searchTaskDto);
   }
 
@@ -48,7 +46,7 @@ export class TaskController {
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
-    @Body(new ValidationPipe()) { status }: UpdateTaskDto,
+    @Body() { status }: UpdateTaskDto,
   ): Promise<Task> {
     const updateTaskDto: UpdateTaskDto = {
       id,
